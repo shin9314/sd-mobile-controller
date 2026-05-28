@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <linearGradient id="bg" x1="1" x2="0" y1="0" y2="1">
+      <stop stop-color="#0d2f3c"/>
+      <stop offset="0.55" stop-color="#191d33"/>
+      <stop offset="1" stop-color="#070a0f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <path d="M184 770c218-302 494-302 712 0" fill="#e2fbff" opacity="0.2"/>
+  <circle cx="540" cy="410" r="188" fill="#67e8f9" opacity="0.14"/>
+  <circle cx="540" cy="410" r="96" fill="#f5b849" opacity="0.25"/>
+  <text x="540" y="905" text-anchor="middle" fill="#eef6fb" font-size="56" font-family="Arial, sans-serif" font-weight="700">PLACEHOLDER</text>
+</svg>

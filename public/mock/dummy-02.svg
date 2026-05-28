@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#25142d"/>
+      <stop offset="0.45" stop-color="#34405f"/>
+      <stop offset="1" stop-color="#081017"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <circle cx="512" cy="456" r="250" fill="#f5b849" opacity="0.15"/>
+  <circle cx="512" cy="456" r="152" fill="#22d3ee" opacity="0.18"/>
+  <path d="M252 645c140-94 379-94 520 0v87H252z" fill="#ecfeff" opacity="0.34"/>
+  <path d="M332 594c96-96 264-96 360 0" fill="none" stroke="#f5b849" stroke-width="18" stroke-linecap="round"/>
+  <text x="512" y="878" text-anchor="middle" fill="#eef6fb" font-size="48" font-family="Arial, sans-serif" font-weight="700">MOCK OUTPUT</text>
+</svg>

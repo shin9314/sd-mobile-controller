@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  background: #05070b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(34, 211, 238, 0.12), transparent 30rem),
+    linear-gradient(180deg, #05070b 0%, #0a0d14 42%, #05070b 100%);
+  color: #eef6fb;
+  font-family: Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  letter-spacing: 0;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+textarea {
+  resize: vertical;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.28);
+  border-radius: 999px;
+}
+
+@layer components {
+  .mobile-panel {
+    @apply rounded-[8px] border border-white/10 bg-graphite-850/90 shadow-sm;
+  }
+
+  .field-label {
+    @apply text-[12px] font-semibold leading-none text-slate-300;
+  }
+
+  .field-control {
+    @apply min-h-11 w-full rounded-[8px] border border-white/10 bg-graphite-900 px-3 py-2.5 text-[14px] leading-relaxed text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyanfire-500/80 focus:ring-2 focus:ring-cyanfire-500/15;
+  }
+
+  .touch-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[8px] px-3 text-[13px] font-bold leading-none transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .section-title {
+    @apply text-[13px] font-bold text-slate-100;
+  }
+}

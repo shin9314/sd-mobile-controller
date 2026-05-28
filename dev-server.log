@@ -1,0 +1,54 @@
+
+> sd-mobile-controller@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.18
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.128.3:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 7.1s
+ ○ Compiling /launch ...
+ ✓ Compiled /launch in 3.7s (555 modules)
+ GET /launch 200 in 5895ms
+ ○ Compiling /api/auth/session ...
+ ✓ Compiled /api/auth/session in 2.6s (582 modules)
+ GET /api/auth/session 200 in 3342ms
+ ○ Compiling /api/runpod/health ...
+ ✓ Compiled /api/runpod/health in 2.9s (587 modules)
+ GET /api/runpod/health 200 in 3285ms
+ GET /api/runpod/status 400 in 3331ms
+ ○ Compiling /api/auth/logout ...
+ ✓ Compiled /api/auth/logout in 1697ms (582 modules)
+ POST /api/auth/logout 200 in 2161ms
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 969ms (584 modules)
+ POST /api/auth/login 200 in 1233ms
+ ✓ Compiled /api/runpod/health in 379ms (357 modules)
+ ✓ Compiled (359 modules)
+ GET /api/runpod/health 200 in 898ms
+ GET /api/runpod/status 400 in 954ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.2s (632 modules)
+ GET / 200 in 3119ms
+ ○ Compiling /api/auth/session ...
+ ✓ Compiled /api/auth/session in 1875ms (383 modules)
+ GET /api/auth/session 200 in 2132ms
+ ○ Compiling /api/generations ...
+ ✓ Compiled /api/generations in 2.6s (646 modules)
+ GET /api/generations 200 in 3192ms
+ GET /api/settings 200 in 3217ms
+ GET /api/presets 200 in 3221ms
+   Reload env: .env
+ ✓ Compiled in 1575ms (601 modules)
+ GET / 200 in 1017ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 16s (620 modules)
+ GET /launch 404 in 17575ms
+ GET / 200 in 173ms
+ GET /launch 200 in 1365ms
+ GET /launch 200 in 729ms
+ GET /launch 200 in 466ms
+ GET /launch 200 in 328ms
+[?25h

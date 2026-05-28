@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Setting {
+  id                     Int       @id
+  runpodApiKey           String    @default("")
+  podId                  String    @default("")
+  sdApiUrl               String    @default("http://127.0.0.1:17860")
+  sdApiBasicAuthUser     String    @default("")
+  sdApiBasicAuthPassword String    @default("")
+  sdApiLastCheckedAt     DateTime?
+  sdApiLastOk            Boolean?
+  sdApiLastError         String?
+  sdApiCurrentModel      String?
+  sdApiModelCount        Int?
+  sdApiSamplerCount      Int?
+  autoStopMinutes        Int?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model Preset {
+  id             String   @id @default(cuid())
+  name           String
+  prompt         String
+  negativePrompt String   @default("")
+  model          String
+  vae            String
+  size           String
+  count          Int
+  sampler        String
+  steps          Int
+  cfg            Float
+  seed           Int
+  fixedSeed      Boolean  @default(false)
+  lorasJson      String   @default("[]")
+  controlNetJson String   @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model GenerationHistory {
+  id             String   @id @default(cuid())
+  imageUrl       String
+  prompt         String
+  negativePrompt String   @default("")
+  model          String
+  vae            String
+  size           String
+  count          Int
+  sampler        String
+  steps          Int
+  cfg            Float
+  seed           Int
+  fixedSeed      Boolean  @default(false)
+  lorasJson      String   @default("[]")
+  controlNetJson String   @default("{}")
+  createdAt      DateTime @default(now())
+}

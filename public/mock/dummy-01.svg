@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024" viewBox="0 0 768 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#132238"/>
+      <stop offset="0.5" stop-color="#16546c"/>
+      <stop offset="1" stop-color="#071018"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="38%" r="50%">
+      <stop stop-color="#78f5ff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#78f5ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="768" height="1024" fill="url(#bg)"/>
+  <circle cx="384" cy="382" r="310" fill="url(#glow)"/>
+  <path d="M167 742c120-201 313-213 434 0" fill="none" stroke="#e7fbff" stroke-width="18" stroke-linecap="round" opacity="0.62"/>
+  <path d="M239 675c82-103 208-105 290 0" fill="none" stroke="#67e8f9" stroke-width="10" stroke-linecap="round"/>
+  <text x="384" y="902" text-anchor="middle" fill="#eef6fb" font-size="42" font-family="Arial, sans-serif" font-weight="700">DUMMY SD IMAGE</text>
+</svg>
