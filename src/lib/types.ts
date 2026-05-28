@@ -43,6 +43,7 @@ export type PresetRecord = GenerationSettings & {
 export type GenerationRecord = GenerationSettings & {
   id: string;
   imageUrl: string;
+  infoText: string;
   createdAt: string;
 };
 

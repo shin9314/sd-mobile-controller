@@ -10,7 +10,9 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    const body = await response.json().catch(() => null) as { errorMessage?: string; bodyPreview?: string } | null;
+    const details = body?.bodyPreview ? `\n${body.bodyPreview}` : "";
+    throw new Error(`${body?.errorMessage ?? `Request failed: ${response.status}`}${details}`);
   }
 
   return response.json() as Promise<T>;

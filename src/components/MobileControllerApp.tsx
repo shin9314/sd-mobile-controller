@@ -293,21 +293,19 @@ export function MobileControllerApp() {
 
     setIsGenerating(true);
     setPodStatus("生成中");
-    addLog("生成リクエストを受け付けました");
+    addLog("txt2img生成リクエストを送信しました");
 
-    window.setTimeout(async () => {
-      try {
-        const created = await apiClient.createGeneration(form);
-        setGenerations((current) => [created, ...current]);
-        setSelectedGeneration(created);
-        addLog("ダミー画像を作成しました");
-      } catch {
-        addLog("ダミー生成に失敗しました");
-      } finally {
-        setPodStatus("起動中");
-        setIsGenerating(false);
-      }
-    }, 2000);
+    try {
+      const created = await apiClient.createGeneration(form);
+      setGenerations((current) => [created, ...current]);
+      setSelectedGeneration(created);
+      addLog("実画像を生成しました");
+    } catch (error) {
+      addLog(error instanceof Error ? error.message : "txt2img生成に失敗しました");
+    } finally {
+      setPodStatus("起動中");
+      setIsGenerating(false);
+    }
   };
 
   const handleDeleteGeneration = async (id: string) => {
@@ -438,6 +436,7 @@ export function MobileControllerApp() {
       <GenerateScreen
         apiStatus={apiStatus}
         form={form}
+        generationModeLabel={apiStatus === "接続OK" ? "実生成モード" : "API未接続"}
         isGenerating={isGenerating}
         logs={logs}
         modelChoices={sdModelOptions}
@@ -581,6 +580,7 @@ function LoginScreen({
 function GenerateScreen({
   apiStatus,
   form,
+  generationModeLabel,
   isGenerating,
   logs,
   modelChoices,
@@ -600,6 +600,7 @@ function GenerateScreen({
 }: {
   apiStatus: ApiStatus;
   form: GenerationSettings;
+  generationModeLabel: string;
   isGenerating: boolean;
   logs: LogItem[];
   modelChoices: readonly string[];
@@ -625,7 +626,7 @@ function GenerateScreen({
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-[21px] font-black leading-tight text-white">SD Mobile Controller</h1>
-            <p className="mt-1 text-[12px] leading-relaxed text-slate-400">RunPod / Forge / A1111 mock controller</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-slate-400">RunPod / Forge / A1111 controller</p>
           </div>
           <div className="flex flex-col items-end gap-1.5">
             <StatusBadge label={`Pod: ${podStatus}`} className={statusTone(podStatus)} />
@@ -681,7 +682,7 @@ function GenerateScreen({
       <section className="mobile-panel space-y-3 p-4">
         <div className="flex items-center justify-between">
           <h2 className="section-title">生成設定</h2>
-          <span className="text-[11px] font-semibold text-slate-500">Step 1 mock</span>
+          <span className="text-[11px] font-semibold text-slate-500">{generationModeLabel}</span>
         </div>
         <div className="grid grid-cols-1 gap-3">
           <SelectField label="モデル" value={form.model} options={optionsWithCurrent(modelChoices, form.model)} onChange={(value) => onUpdate("model", value)} />
@@ -766,7 +767,7 @@ function GalleryScreen({
 }) {
   return (
     <div className="space-y-4">
-      <ScreenHeader title="画像一覧" caption="ダミー生成履歴" />
+      <ScreenHeader title="画像一覧" caption="生成履歴" />
 
       {selectedGeneration ? (
         <GenerationDetail generation={selectedGeneration} onClose={() => onSelect(null)} onLoad={onLoad} />
@@ -774,7 +775,7 @@ function GalleryScreen({
 
       <div className="space-y-3">
         {generations.length === 0 ? (
-          <EmptyState title="画像履歴はまだありません" body="生成画面からダミー生成すると、ここに履歴が追加されます。" />
+          <EmptyState title="画像履歴はまだありません" body="生成画面から画像生成すると、ここに履歴が追加されます。" />
         ) : (
           generations.map((generation) => (
             <article key={generation.id} className="mobile-panel overflow-hidden">
@@ -1260,6 +1261,14 @@ function GenerationDetail({
           label="ControlNet"
           value={generation.controlNet.enabled ? `${generation.controlNet.type} / Weight ${generation.controlNet.weight}` : "OFF"}
         />
+        {generation.infoText ? (
+          <details className="rounded-[8px] bg-black/20 p-3">
+            <summary className="cursor-pointer list-none text-[11px] font-bold text-slate-500">A1111 info</summary>
+            <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-all text-[11px] leading-relaxed text-slate-300">
+              {generation.infoText}
+            </pre>
+          </details>
+        ) : null}
         <button className="touch-button min-h-[52px] w-full bg-cyanfire-500 text-slate-950" onClick={() => onLoad(generation)}>
           この設定を生成画面へ読み込む
         </button>

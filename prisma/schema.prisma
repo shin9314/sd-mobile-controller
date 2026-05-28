@@ -61,5 +61,6 @@ model GenerationHistory {
   fixedSeed      Boolean  @default(false)
   lorasJson      String   @default("[]")
   controlNetJson String   @default("{}")
+  infoText       String   @default("")
   createdAt      DateTime @default(now())
 }

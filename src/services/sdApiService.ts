@@ -12,6 +12,43 @@ type SdApiAuth = {
   password?: string;
 };
 
+export type SdApiGenerationConfig = {
+  baseUrl: string;
+  auth?: SdApiAuth;
+};
+
+export type Txt2ImgGenerationResult = {
+  images: string[];
+  parameters: unknown;
+  info: string;
+  payload: Record<string, unknown>;
+  bodyPreview: string;
+};
+
+export class SdApiGenerationError extends Error {
+  status: number | null;
+  statusText: string;
+  contentType: string | null;
+  bodyPreview: string;
+
+  constructor(
+    message: string,
+    details: {
+      status?: number | null;
+      statusText?: string;
+      contentType?: string | null;
+      bodyPreview?: string;
+    } = {}
+  ) {
+    super(message);
+    this.name = "SdApiGenerationError";
+    this.status = details.status ?? null;
+    this.statusText = details.statusText ?? "";
+    this.contentType = details.contentType ?? null;
+    this.bodyPreview = details.bodyPreview ?? "";
+  }
+}
+
 type EndpointResult =
   | {
       ok: true;
@@ -25,6 +62,7 @@ type EndpointResult =
     };
 
 const SD_API_TIMEOUT_MS = 8000;
+const SD_TXT2IMG_TIMEOUT_MS = 120_000;
 const SD_ENDPOINTS = {
   options: "/sdapi/v1/options",
   models: "/sdapi/v1/sd-models",
@@ -35,6 +73,8 @@ const SD_ENDPOINTS = {
   controlNetModels: "/controlnet/model_list",
   controlNetModules: "/controlnet/module_list"
 } as const;
+const DUMMY_MODEL_NAMES = new Set(["SDXL Base", "Anime SDXL", "Realistic SDXL"]);
+const DUMMY_VAE_NAMES = new Set(["Automatic", "sdxl_vae.safetensors"]);
 
 export function normalizeSdApiUrl(url: string): string {
   const trimmed = url.trim().replace(/\/+$/, "");
@@ -68,6 +108,13 @@ function authHeaders(auth?: SdApiAuth): HeadersInit {
   return {
     Accept: "application/json",
     Authorization: `Basic ${Buffer.from(`${user}:${password}`).toString("base64")}`
+  };
+}
+
+function jsonAuthHeaders(auth?: SdApiAuth): HeadersInit {
+  return {
+    ...authHeaders(auth),
+    "Content-Type": "application/json"
   };
 }
 
@@ -245,6 +292,113 @@ function listFromControlNetPayload(value: unknown, key: string) {
   return Array.isArray(list) ? namesFromArray(list, ["name", "title", "model_name", "module", "value"]) : [];
 }
 
+function parseSize(size: string) {
+  const match = size.match(/^(\d{2,5})x(\d{2,5})$/i);
+  if (!match) {
+    throw new SdApiGenerationError("画像サイズの形式が不正です。例: 768x1024 の形で指定してください。");
+  }
+
+  const width = Number(match[1]);
+  const height = Number(match[2]);
+
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0) {
+    throw new SdApiGenerationError("画像サイズの値が不正です。");
+  }
+
+  return { width, height };
+}
+
+function shouldSendModelOverride(model: string) {
+  return Boolean(model.trim()) && !DUMMY_MODEL_NAMES.has(model);
+}
+
+function shouldSendVaeOverride(vae: string) {
+  return Boolean(vae.trim()) && !DUMMY_VAE_NAMES.has(vae);
+}
+
+function buildTxt2ImgPayload(settings: GenerationSettings) {
+  const { width, height } = parseSize(settings.size);
+  const payload: Record<string, unknown> = {
+    prompt: settings.prompt,
+    negative_prompt: settings.negativePrompt,
+    steps: settings.steps,
+    cfg_scale: settings.cfg,
+    width,
+    height,
+    sampler_name: settings.sampler,
+    batch_size: settings.count,
+    n_iter: 1,
+    seed: settings.fixedSeed ? settings.seed : -1,
+    save_images: false
+  };
+  const overrideSettings: Record<string, string> = {};
+
+  if (shouldSendModelOverride(settings.model)) {
+    overrideSettings.sd_model_checkpoint = settings.model;
+  }
+
+  if (shouldSendVaeOverride(settings.vae)) {
+    overrideSettings.sd_vae = settings.vae;
+  }
+
+  if (Object.keys(overrideSettings).length > 0) {
+    payload.override_settings = overrideSettings;
+  }
+
+  return payload;
+}
+
+function messageForTxt2ImgHttpError(status: number, bodyPreview: string) {
+  const lowerBody = bodyPreview.toLowerCase();
+
+  if (status === 401 || status === 403) {
+    return "Basic認証に失敗しました。SD API Basic Auth User / Password を確認してください。";
+  }
+
+  if (status === 404) {
+    return "/sdapi/v1/txt2img が404です。Stable Diffusion WebUIが --api 有効で起動しているか確認してください。";
+  }
+
+  if (lowerBody.includes("cuda") && lowerBody.includes("out of memory")) {
+    return "A1111側でCUDA out of memoryが発生した可能性があります。画像サイズ、枚数、VRAM使用量を下げてください。";
+  }
+
+  return `A1111側がHTTP ${status}を返しました。生成設定とWebUIのログを確認してください。`;
+}
+
+function messageForTxt2ImgFetchError(error: unknown) {
+  if (error instanceof Error && error.name === "AbortError") {
+    return "txt2img生成がタイムアウトしました。A1111の起動状態、VRAM、生成時間を確認してください。";
+  }
+
+  if (error instanceof TypeError) {
+    return "生成中にStable Diffusion APIへ接続できませんでした。ネットワーク切断またはWebUI停止の可能性があります。";
+  }
+
+  return error instanceof Error ? error.message : "txt2img生成に失敗しました。";
+}
+
+function assertTxt2ImgPayload(value: unknown, bodyPreview: string): Txt2ImgGenerationResult {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new SdApiGenerationError("A1111のtxt2imgレスポンス形式が不正です。", { bodyPreview });
+  }
+
+  const record = value as Record<string, unknown>;
+  const images = Array.isArray(record.images) ? record.images.filter((image): image is string => typeof image === "string") : [];
+
+  if (images.length === 0) {
+    throw new SdApiGenerationError("A1111のレスポンスに生成画像が含まれていません。", { bodyPreview });
+  }
+
+  return {
+    images,
+    parameters: record.parameters ?? null,
+    info: typeof record.info === "string" ? record.info : "",
+    payload: {},
+    bodyPreview
+  };
+}
+
 async function checkControlNetConnection(baseUrl: string, auth?: SdApiAuth): Promise<ControlNetApiCheckResult> {
   const startedAt = Date.now();
   const [versionResult, modelsResult, modulesResult] = await Promise.all([
@@ -386,6 +540,74 @@ export async function checkSdApiConnection(baseUrl: string, auth?: SdApiAuth): P
       controlNet: controlNetResult,
       warnings
     };
+  }
+}
+
+export async function requestTxt2ImgGeneration(
+  settings: GenerationSettings,
+  apiConfig: SdApiGenerationConfig
+): Promise<Txt2ImgGenerationResult> {
+  let baseUrl = "";
+  try {
+    baseUrl = normalizeSdApiUrl(apiConfig.baseUrl);
+  } catch (error) {
+    throw new SdApiGenerationError(error instanceof Error ? error.message : "Stable Diffusion API URLを確認してください。");
+  }
+
+  const endpoint = `${baseUrl}/sdapi/v1/txt2img`;
+  const payload = buildTxt2ImgPayload(settings);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), SD_TXT2IMG_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: jsonAuthHeaders(apiConfig.auth),
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+      cache: "no-store"
+    });
+    const status = response.status;
+    const statusText = response.statusText;
+    const contentType = response.headers.get("content-type");
+    const body = await response.text();
+    const bodyPreview = body.slice(0, 500);
+
+    let data: unknown = null;
+    try {
+      data = JSON.parse(body);
+    } catch (error) {
+      throw new SdApiGenerationError("A1111のtxt2imgレスポンスがJSONではありません。", {
+        status,
+        statusText,
+        contentType,
+        bodyPreview: `${bodyPreview}\nparseError: ${error instanceof Error ? error.message : "JSON parse failed"}`
+      });
+    }
+
+    if (!response.ok) {
+      const message = messageForTxt2ImgHttpError(status, bodyPreview);
+      throw new SdApiGenerationError(message, {
+        status,
+        statusText,
+        contentType,
+        bodyPreview
+      });
+    }
+
+    const result = assertTxt2ImgPayload(data, bodyPreview);
+    return {
+      ...result,
+      payload
+    };
+  } catch (error) {
+    if (error instanceof SdApiGenerationError) {
+      throw error;
+    }
+
+    throw new SdApiGenerationError(messageForTxt2ImgFetchError(error));
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

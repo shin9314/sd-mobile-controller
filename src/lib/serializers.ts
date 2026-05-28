@@ -49,6 +49,7 @@ export function toGenerationRecord(row: GenerationHistory): GenerationRecord {
     fixedSeed: row.fixedSeed,
     loras: parseJson<LoraItem[]>(row.lorasJson, []),
     controlNet: parseJson<ControlNetConfig>(row.controlNetJson, defaultControlNet),
+    infoText: row.infoText,
     createdAt: row.createdAt.toISOString()
   };
 }

@@ -212,3 +212,63 @@ Launch Controller が確認するもの:
 - Pod停止: RunPod REST API `POST /v1/pods/{podId}/stop`
 - SD Mobile Controller応答: `RUNPOD_APP_URL`
 - A1111 API docs応答: `RUNPOD_WEBUI_URL/docs`
+
+## txt2img 実生成
+
+生成画面の `生成する` は、SD API接続確認が `接続OK` の場合に A1111 / Stable Diffusion WebUI API の `POST /sdapi/v1/txt2img` を呼びます。
+接続先は設定画面に保存した `Stable Diffusion API URL` を優先し、未設定時は `.env` の `SD_API_BASE_URL` を使います。
+RunPod内では通常 `http://127.0.0.1:17860` です。
+
+送信payload:
+
+```json
+{
+  "prompt": "...",
+  "negative_prompt": "...",
+  "steps": 20,
+  "cfg_scale": 7,
+  "width": 768,
+  "height": 1024,
+  "sampler_name": "DPM++ 2M Karras",
+  "batch_size": 1,
+  "n_iter": 1,
+  "seed": -1,
+  "override_settings": {
+    "sd_model_checkpoint": "実モデル名",
+    "sd_vae": "実VAE名"
+  }
+}
+```
+
+`override_settings` は、設定画面の接続確認で取得した実モデル名/VAE名が選ばれている場合だけ付与します。
+LoRA / ControlNet の実反映は次のStepで対応予定です。
+
+A1111レスポンスの `images[0]` はサーバー側でPNGとして保存します。
+
+```text
+storage/generated/generated_YYYYMMDD_HHMMSS_seed.png
+```
+
+画像表示は `GET /api/generated/[filename]` 経由です。このAPIは `storage/generated` 内の `.png` だけを返し、`..` や `/` を含むファイル名は拒否します。
+
+RunPod上での更新と確認:
+
+```bash
+cd /workspace/sd-mobile-controller
+git pull
+npm install
+npm run prisma:migrate
+npm run build:runpod
+npm run start:runpod
+```
+
+確認手順:
+
+1. `https://h2vaifo7f3a77q-3000.proxy.runpod.net` を開く
+2. `user/password` でログイン
+3. 設定画面で SD API接続OKを確認
+4. 生成画面で prompt に `1girl` を入力
+5. `生成する` を押す
+6. 本物の画像が直近生成画像に表示される
+7. 画像一覧に履歴が残る
+8. 画像詳細でプロンプト、設定、A1111 infoが見える
