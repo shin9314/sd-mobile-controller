@@ -9,40 +9,7 @@
 
  ✓ Starting...
  ✓ Ready in 6.5s
- ○ Compiling / ...
- ✓ Compiled / in 5.5s (586 modules)
- GET / 200 in 7345ms
- ○ Compiling /api/auth/session ...
- ✓ Compiled /api/auth/session in 2.6s (613 modules)
- GET /api/auth/session 200 in 3424ms
- ○ Compiling /api/generations ...
- ✓ Compiled /api/generations in 3.1s (627 modules)
- GET /api/settings 200 in 4022ms
- GET /api/generations 200 in 4018ms
- GET /api/presets 200 in 4025ms
- POST /api/generations 400 in 96ms
- GET / 200 in 1236ms
- GET /api/auth/session 200 in 164ms
- GET /api/settings 200 in 149ms
- GET /api/presets 200 in 197ms
- GET /api/generations 200 in 217ms
- GET / 200 in 354ms
- GET /api/auth/session 200 in 69ms
- GET /api/settings 200 in 236ms
- GET /api/presets 200 in 234ms
- GET /api/generations 200 in 250ms
- POST /api/generations 400 in 73ms
- POST /api/generations 400 in 62ms
- ○ Compiling /api/sd/check ...
- ✓ Compiled /api/sd/check in 2.2s (617 modules)
- POST /api/sd/check 200 in 2754ms
- POST /api/sd/check 200 in 1789ms
- POST /api/sd/check 200 in 1174ms
- ○ Compiling /api/settings ...
- ✓ Compiled /api/settings in 782ms (372 modules)
- PUT /api/settings 200 in 1161ms
- ✓ Compiled /api/sd/check in 522ms (375 modules)
- POST /api/sd/check 200 in 1873ms
- ○ Compiling /api/generations ...
- ✓ Compiled /api/generations in 692ms (375 modules)
- POST /api/generations 400 in 937ms
+ ○ Compiling /launch ...
+ ✓ Compiled /launch in 2.9s (563 modules)
+ GET /launch 200 in 1498ms
+ GET /launch 200 in 208ms

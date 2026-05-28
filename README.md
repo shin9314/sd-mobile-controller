@@ -272,3 +272,56 @@ npm run start:runpod
 6. 本物の画像が直近生成画像に表示される
 7. 画像一覧に履歴が残る
 8. 画像詳細でプロンプト、設定、A1111 infoが見える
+
+## Launch Controller 起動リトライと通知
+
+`/launch` では、RunPodのGPU空き不足などでPod起動が一度失敗しても、フロントエンド側で自動的に起動リトライします。API route内では長時間sleepせず、Vercelなどのサーバーレス環境でも動かしやすい形にしています。
+
+既定値:
+
+- 起動リトライ間隔: 8秒
+- 最大試行回数: 150回
+- 最大待機時間: 約20分
+- Pod状態/health確認間隔: 5秒
+
+上書きできる環境変数:
+
+```env
+RUNPOD_START_MAX_ATTEMPTS=150
+RUNPOD_START_RETRY_INTERVAL_SECONDS=8
+RUNPOD_STATUS_POLL_INTERVAL_SECONDS=5
+START_SUCCESS_WEBHOOK_URL=""
+```
+
+`/api/runpod/start` は RunPod API が `500` / `502` / `503` / `504` を返した場合に `retryable: true` を返します。`400` / `401` / `403` / `404` は API Key、権限、Pod ID、リクエスト形式の問題が疑われるため `retryable: false` です。
+
+起動成功判定:
+
+- `/api/runpod/start` 成功後に `/api/runpod/status` で `RUNNING` を確認
+- リトライ待ち中に `/api/runpod/status` が `RUNNING` を返した場合
+
+`RUNNING` 確認後も、`RUNPOD_APP_URL` と `RUNPOD_WEBUI_URL/docs` を5秒ごとに確認します。`RUNPOD_APP_URL` が応答OKになったら「SD Mobile Controllerを開けます」と表示され、「開く」ボタンが有効になります。
+
+通知機能:
+
+- 「通知を許可」ボタンで Notification API の許可を要求します。
+- 「通知テスト」ボタンでブラウザ通知、短いbeep音、スマホのバイブを試します。
+- 起動完了時にブラウザ通知、Web Audio APIのbeep音、`navigator.vibrate` を実行します。
+- ブラウザ通知、音、バイブはブラウザやスマホOSの制限を受けます。確実に通知したい場合はWebhook通知も設定してください。
+
+Webhook通知:
+
+- `START_SUCCESS_WEBHOOK_URL` が空なら何もしません。
+- 設定されている場合、起動完了時にサーバー側の `POST /api/notify/start-success` 経由でWebhookへPOSTします。
+- Webhook URLはフロントエンドやAPIレスポンスへ返しません。
+- Discord Webhook向けに `content`、汎用向けに `text` / `appUrl` を送ります。
+
+スマホ運用の基本:
+
+1. `/launch` を開いてログインします。
+2. 「通知を許可」を押します。
+3. 「通知テスト」で通知、音、バイブを確認します。
+4. 「Pod起動」を押します。
+5. GPU空き待ちで起動失敗した場合は、8秒間隔で最大150回、約20分まで自動リトライします。
+6. 「SD Mobile Controllerを開けます」と表示されたら「開く」を押します。
+7. RunPod実状態が `RUNNING` の間は課金が継続します。使い終わったら必ず「Pod停止」を押してください。
